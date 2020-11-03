@@ -3,9 +3,7 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler, CallbackContext
 import logging, time, os, json, random, sys
 
-TOKEN = ""
-ACTFILEPATH = "c:\coding\Ruriruri_bot\open"
-CHAT_ID = ""
+CONFIGFILE = "config.json"
 # -@otakutto
 
 CLOSED = 0
@@ -25,8 +23,13 @@ IDX_MSG_ALERT = 6
 
 try:
     messages = json.load(open(MESSAGE_FILE, "rb"))
+    config = json.load(open(CONFIGFILE, "rb"))
+    TOKEN = config[0]
+    ACTFILEPATH = config[1]
+    CHAT_ID = config[2]
+    
 except FileNotFoundError:
-    sys.exit("messages.json missing, quitting.")
+    sys.exit("messages.json or config.json missing, quitting.")
 
 
 def get_random_msg(index):
