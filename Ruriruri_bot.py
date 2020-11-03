@@ -3,9 +3,9 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler, CallbackContext
 import logging, time, os, json, random, sys
 
-TOKEN = "1494633916:AAFbgDFriuIGFmLKJKM-tazqkWZPnZ1qzxI"
+TOKEN = ""
 ACTFILEPATH = "c:\coding\Ruriruri_bot\open"
-CHAT_ID = "-409207145"
+CHAT_ID = ""
 # -@otakutto
 
 CLOSED = 0
