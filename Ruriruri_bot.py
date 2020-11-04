@@ -1,9 +1,11 @@
 from telegram import Update
 from telegram.ext import Updater
-from telegram.ext import CommandHandler, CallbackContext
-import logging, time, os, json, random, sys
+from telegram.ext import CommandHandler, CallbackContext, MessageHandler, Filters
+import logging, time, os, json, random, sys, signal, re
+from subprocess import call
 
 CONFIGFILE = "config.json"
+RESOURCE_FILE = "resources.json"
 # -@otakutto
 
 CLOSED = 0
@@ -18,11 +20,17 @@ MSG_NOT_OPEN_ERROR = "NOT_OPEN_ERROR"
 MSG_REPORT = "REPORT"
 MSG_ALERT = "ALERT"
 MSG_OTHER = "OTHER"
+MSG_IDENTITY = "IDENTITY"
+MSG_IDIOTS = "STUPIDITY"
+
+SOUND_OK = "SOUND_OK"
+SOUND_ALERT = "SOUND_ALERT"
 
 CHECK_INTERVAL = 10
 
-RESOURCE_FILE = "resources.json"
-IDENTITY = "I'm Ruri Hoshino, part time club room monitor."
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.WARNING)
 
 # Load configuration and resources.
 try:
@@ -32,6 +40,8 @@ try:
     ACTFILEPATH = config["actfile"]
     CHAT_ID = config["chat_id"]
     USE_PIC = config["use_pic_type"]
+    NAUGHTY_RE = re.compile("|".join(resources["NAUGHTY_REGEX"]))
+    IDENTITY_RE = re.compile(resources["IDENTITY_REGEX"])
     
 except FileNotFoundError:
     sys.exit("resources.json or config.json missing, quitting.")
@@ -39,15 +49,18 @@ except FileNotFoundError:
 
 
 def get_resource(resource: str):
+
     i = random.randint(0, len(resources[resource]) - 1)
     return resources[resource][i]
 
 
 def send_text_message(context: CallbackContext, msg: str):
+
     context.bot.send_message(chat_id=CHAT_ID, text=msg)
 
 
 def send_photo_message(context: CallbackContext, image_path: str, msg: str) -> int:
+
     try:
         context.bot.send_photo(chat_id=CHAT_ID, photo=open(image_path, 'rb'), caption=msg)
         return 1
@@ -58,6 +71,7 @@ def send_photo_message(context: CallbackContext, image_path: str, msg: str) -> i
 
 # Send either photo or ordinary message based on config
 def send_message(context: CallbackContext, msg: str, type: str):
+
     try:
         if not msg:
             msg = get_resource(type)
@@ -70,6 +84,7 @@ def send_message(context: CallbackContext, msg: str, type: str):
 
 
 def get_state(context: CallbackContext) -> int:
+
     try:
         return context.bot_data["open"]
     except KeyError:
@@ -78,6 +93,7 @@ def get_state(context: CallbackContext) -> int:
 
 
 def set_state(context: CallbackContext, state: int):
+
     try:
         context.bot_data["open"] = state
     except KeyError:
@@ -85,27 +101,61 @@ def set_state(context: CallbackContext, state: int):
 
 
 def verify_chat_id(update: Update):
+
     return update.effective_chat.id == CHAT_ID
 
 
+# Sound playing
+def play(sound):
+
+    print("***** playing sound: " + sound + " *****")
+    #call(["aplay", "--buffer-size=4096",  sound])
+
+
+# Doorbell
+def alert_signal(signum, stack):
+
+    if opened:
+        play(get_resource(SOUND_ALERT))
+
+# Doorbell signal (*NIX only)
+# signal.signal(signal.SIGUSR2, alert_signal)    
+
+
+
 def identity(update: Update, context: CallbackContext ):
+
     if verify_chat_id:
-        send_message(context, IDENTITY, MSG_OTHER)
+        send_message(context, "", MSG_IDENTITY)
+
+
+def respond_to_idiots(update: Update, context: CallbackContext ):
+
+    if verify_chat_id:
+        msg = "@" + update.message.from_user.username
+        send_message(context, msg, MSG_IDIOTS)
 
     
 def process_report(update: Update, context: CallbackContext ):
+
     if verify_chat_id:
-        msg = ""
+        msg = " ".join(context.args)
         if get_state(context) != CLOSED :
-            msg = " ".join(context.args)
+        
             context.bot_data["status"] = msg
             set_state(context, REPORTED)
             send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
+            play(get_resource(SOUND_OK))
+            logging.getLogger().log(35, "New report: " + msg)
+            
         else:
             send_message(context, "", MSG_NOT_OPEN_ERROR)
+        if NAUGHTY_RE.match(msg):
+            respond_to_idiots(update, context)
             
 
 def give_report(update: Update, context: CallbackContext ):
+
     if verify_chat_id:
         state = get_state(context)
         if  state == REPORTED:
@@ -118,37 +168,44 @@ def give_report(update: Update, context: CallbackContext ):
 
 
 def activity_check(context: CallbackContext):
-    
     if os.path.exists(ACTFILEPATH):
         if get_state(context) == CLOSED:
             set_state(context, OPEN)
             send_message(context, "", MSG_OPEN)
+            logging.getLogger().log(35, "Open")
     else:
         if get_state(context) != CLOSED:
             context.bot_data["open"] = CLOSED
-            send_message(context, "", MSG_CLOSED)            
+            send_message(context, "", MSG_CLOSED)
+            logging.getLogger().log(35, "Closed")
 
+
+def log( msg: str ):
+    print()
 
 def main():
 
     updater = Updater(token=TOKEN)
     dispatcher = updater.dispatcher
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
-                        
+    
+  
+  
     identity_handler = CommandHandler(['who'], identity)
     report_handler = CommandHandler(['Ruriruri', 'reporting'], process_report)
     status_handler = CommandHandler(['status', 'report'], give_report)
+    pervert_and_idiot_handler = MessageHandler(Filters.regex(IDENTITY_RE) & Filters.regex(NAUGHTY_RE), respond_to_idiots)
+    
     
     dispatcher.add_handler(identity_handler)
     dispatcher.add_handler(report_handler)
     dispatcher.add_handler(status_handler)
+    dispatcher.add_handler(pervert_and_idiot_handler)
     
     updater.job_queue.run_repeating(activity_check, interval=CHECK_INTERVAL, first=0)
     
+    
     updater.start_polling()
-    while(updater.running):
-        time.sleep(10)
+    updater.idle()
 
 
 if __name__ == "__main__":
