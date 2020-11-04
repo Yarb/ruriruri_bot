@@ -1,5 +1,15 @@
-[
-  "TELEGRAM BOT TOKEN",
-  "LOCATION OF FILE TO BE MONITORED FOR OPEN/CLOSED STATUS", 
-  "TELEGRAM CHAT_ID"
-]
+{
+  "token": "TG TOKEN GOES HERE",
+  "actfile": "LOCATION OF THE MONITORED ACTIVITY FILE GOES HERE", 
+  "chat_id": "CHAT ID OF THE TARGET TG GROUP",
+  "use_pic_type": {
+    "OPENED" : "Ruri_pic",
+    "CLOSED" : "Ruri_pic",
+    "NO_REPORT" : "baka_pic",
+    "NOT_OPEN" : "Ruri_pic",
+    "NOT_OPEN_ERROR" : "baka_pic",
+    "REPORT" : "Ruri_pic",
+    "ALERT" : "Ruri_pic",
+    "OTHER" : "Ruri_pic"
+  }
+}
