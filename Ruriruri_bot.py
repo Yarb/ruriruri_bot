@@ -10,43 +10,63 @@ CLOSED = 0
 OPEN = 1
 REPORTED = 2
 
+MSG_OPEN = "OPENED"
+MSG_CLOSED = "CLOSED"
+MSG_NO_REPORT = "NO_REPORT"
+MSG_NOT_OPEN = "NOT_OPEN"
+MSG_NOT_OPEN_ERROR = "NOT_OPEN_ERROR"
+MSG_REPORT = "REPORT"
+MSG_ALERT = "ALERT"
+MSG_OTHER = "OTHER"
+
 CHECK_INTERVAL = 10
 
-MESSAGE_FILE = "messages.json"
-IDX_IMG_BAKA = 0
-IDX_IMG_RURI = 1
-IDX_MSG_NOW_OPEN = 2
-IDX_MSG_NO_REPORT = 3
-IDX_MSG_NOW_CLOSED = 4
-IDX_MSG_NOT_OPEN = 5
-IDX_MSG_ALERT = 6
+RESOURCE_FILE = "resources.json"
+IDENTITY = "I'm Ruri Hoshino, part time club room monitor."
 
+# Load configuration and resources.
 try:
-    messages = json.load(open(MESSAGE_FILE, "rb"))
+    resources = json.load(open(RESOURCE_FILE, "rb"))
     config = json.load(open(CONFIGFILE, "rb"))
-    TOKEN = config[0]
-    ACTFILEPATH = config[1]
-    CHAT_ID = config[2]
+    TOKEN = config["token"]
+    ACTFILEPATH = config["actfile"]
+    CHAT_ID = config["chat_id"]
+    USE_PIC = config["use_pic_type"]
     
 except FileNotFoundError:
-    sys.exit("messages.json or config.json missing, quitting.")
+    sys.exit("resources.json or config.json missing, quitting.")
 
 
-def get_random_msg(index):
-    i = random.randint(0, len(messages[index]) - 1)
-    return messages[index][i]
+
+def get_resource(resource: str):
+    i = random.randint(0, len(resources[resource]) - 1)
+    return resources[resource][i]
 
 
-def send_photo(context: CallbackContext, image_path, msg):
+def send_text_message(context: CallbackContext, msg: str):
+    context.bot.send_message(chat_id=CHAT_ID, text=msg)
+
+
+def send_photo_message(context: CallbackContext, image_path: str, msg: str) -> int:
     try:
         context.bot.send_photo(chat_id=CHAT_ID, photo=open(image_path, 'rb'), caption=msg)
         return 1
     except FileNotFoundError:
+        send_text(context, msg)
         return 0
 
 
-def send_message(context: CallbackContext, msg):
-    context.bot.send_message(chat_id=CHAT_ID, text=msg)
+# Send either photo or ordinary message based on config
+def send_message(context: CallbackContext, msg: str, type: str):
+    try:
+        if not msg:
+            msg = get_resource(type)
+        if USE_PIC[type] != "":
+            send_photo_message(context, get_resource(USE_PIC[type]), msg)
+        else:
+            send_text_message(context, msg)
+    except KeyError:
+        print("\n**** Resource configuration error: " + type + " image type missing or resource name mismatch")
 
 
 def get_state(context: CallbackContext) -> int:
@@ -57,7 +77,7 @@ def get_state(context: CallbackContext) -> int:
         return CLOSED
 
 
-def set_state(context: CallbackContext, state):
+def set_state(context: CallbackContext, state: int):
     try:
         context.bot_data["open"] = state
     except KeyError:
@@ -70,19 +90,19 @@ def verify_chat_id(update: Update):
 
 def identity(update: Update, context: CallbackContext ):
     if verify_chat_id:
-        send_photo(context, get_random_msg(IDX_IMG_RURI), "I'm Ruri Hoshino, part time club room monitor.")
+        send_message(context, IDENTITY, MSG_OTHER)
 
     
 def process_report(update: Update, context: CallbackContext ):
     if verify_chat_id:
+        msg = ""
         if get_state(context) != CLOSED :
             msg = " ".join(context.args)
             context.bot_data["status"] = msg
             set_state(context, REPORTED)
-            send_message(context, "Understood, activity set: " + msg)
+            send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
         else:
-            if not send_photo(context, get_random_msg(IDX_IMG_BAKA), get_random_msg(IDX_MSG_NOT_OPEN)):
-                send_message(context, get_random_msg(IDX_MSG_NOT_OPEN))
+            send_message(context, "", MSG_NOT_OPEN_ERROR)
             
 
 def give_report(update: Update, context: CallbackContext ):
@@ -90,11 +110,11 @@ def give_report(update: Update, context: CallbackContext ):
         state = get_state(context)
         if  state == REPORTED:
             msg = context.bot_data["status"]
-            send_message(context, "Currently: " + msg)
+            send_message(context, "Currently: " + msg, MSG_REPORT)
         elif state == OPEN:
-            send_message(context, get_random_msg(IDX_MSG_NO_REPORT))
+            send_message(context, "", MSG_NO_REPORT)
         else:
-            send_photo(context, get_random_msg(IDX_IMG_BAKA), get_random_msg(IDX_MSG_NOT_OPEN))
+            send_message(context, "", MSG_NOT_OPEN)
 
 
 def activity_check(context: CallbackContext):
@@ -102,11 +122,11 @@ def activity_check(context: CallbackContext):
     if os.path.exists(ACTFILEPATH):
         if get_state(context) == CLOSED:
             set_state(context, OPEN)
-            send_photo(context, get_random_msg(IDX_IMG_RURI), get_random_msg(IDX_MSG_NOW_OPEN))
+            send_message(context, "", MSG_OPEN)
     else:
         if get_state(context) != CLOSED:
             context.bot_data["open"] = CLOSED
-            send_message(context, get_random_msg(IDX_MSG_NOW_CLOSED))            
+            send_message(context, "", MSG_CLOSED)            
 
 
 def main():
