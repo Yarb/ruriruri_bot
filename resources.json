@@ -7,6 +7,14 @@
     "icons/Baka5.png",
     "icons/Baka6.png"
   ],
+  "baka_text_pic" : [
+    "icons/Baka1t.png",
+    "icons/Baka2t.png",
+    "icons/Baka3t.png",
+    "icons/Baka4t.png",
+    "icons/Baka5t.png",
+    "icons/Baka6t.png"
+  ],
   "Ruri_pic" : [
     "icons/Ruri1.png",
     "icons/Ruri2.png",
@@ -36,6 +44,16 @@
     "icons/Ruri26.png",
     "icons/Ruri27.png"
   ],
+  
+  "SOUND_OK" : [
+    "Hai.wav"
+  ],
+  "SOUND_ALERT" : [
+    "Diiip.wav"
+  ],
+  
+  "IDENTITY" : "I'm Ruri Hoshino, part time club room monitor.",
+  
   "OPENED" : [
     "Activity in club room, could be a life form.",
     "Sensors detect activity in the club room.",
@@ -84,5 +102,48 @@
   ],
   "OTHER" : [
     "Other messages would go here..."
+  ],
+  "STUPIDITY" : [
+    "Messages for stupid behaviour of users. Placeholder"
+  ],
+  "IDENTITY_REGEX" : "(R|r)uri | /reporting",
+  
+  "NAUGHTY_REGEX" : [
+    "(P|p)anties",
+    "(T|t)its",
+    "(O|o)ppai",
+    "(B|b)oobs",
+    "(B|b)oobies",
+    "(P|p)orn",
+    "(H|h)entai",
+    "(C|c)ock",
+    "(P|p)antsu",
+    "(B|b)lowjob",
+    "(W|w)aifu",
+    "(P|p)aizuri",
+    "(C|c)unt",
+    "(P|p)iss",
+    "(T|t)itties",
+    "(C|c)um",
+    "(S|s)uck",
+    "(S|s)himapan",
+    "(F|f)uck",
+    "(A|a)ss",
+    "(A|a)sshole",
+    "(D|d)ickwad",
+    "(D|d)ick",
+    "(H|h)ooker",
+    "(H|h)ookers",
+    "(S|s)lut",
+    "(S|s)lutty",
+    "(A|a)sswipe",
+    "(A|a)rse",
+    "(A|a)rsehole",
+    "(M|m)okkori",
+    "(A|a)nus",
+    "(A|a)nal",
+    "(N|n)ipples",
+    "(F|f)utanari",
+    "(L|l)olicon"
   ]
 }
