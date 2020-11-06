@@ -104,7 +104,8 @@
     "Other messages would go here..."
   ],
   "STUPIDITY" : [
-    "Messages for stupid behaviour of users. Placeholder"
+    "<sigh>",
+    "really..."
   ],
   "IDENTITY_REGEX" : "(R|r)uri | /reporting",
   
