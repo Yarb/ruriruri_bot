@@ -1,0 +1,18 @@
+{
+  "token": "ODk3MzE1NDI4MzM3MDkwNjcw.YWT4HQ.upvlGlcysxmywNN5vbfvEZwiQO8",
+  "actfile": "./aa.txt", 
+  "guild": "Otakut - The Anime and Manga Club of Otaniemi",
+  "channel": "Club-room",  
+  "use_pic_type": {
+    "OPENED" : "Ruri_pic",
+    "CLOSED" : "Ruri_pic",
+    "NO_REPORT" : "baka_pic",
+    "NOT_OPEN" : "Ruri_pic",
+    "NOT_OPEN_ERROR" : "baka_text_pic",
+    "REPORT" : "Ruri_pic",
+    "ALERT" : "Ruri_pic",
+    "OTHER" : "Ruri_pic",
+    "IDENTITY" : "Ruri_pic",
+    "STUPIDITY" : "baka_text_pic"
+  }
+}
