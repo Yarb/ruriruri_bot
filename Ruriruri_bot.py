@@ -44,8 +44,8 @@ try:
     ACTFILEPATH = config["actfile"]
     CHAT_ID = config["chat_id"]
     USE_PIC = config["use_pic_type"]
-    NAUGHTY_RE = re.compile("|".join(resources["NAUGHTY_REGEX"]))
-    IDENTITY_RE = re.compile(resources["IDENTITY_REGEX"])
+    NAUGHTY_RE = re.compile("|".join(resources["NAUGHTY_REGEX"]), re.IGNORECASE)
+    IDENTITY_RE = re.compile(resources["IDENTITY_REGEX"], re.IGNORECASE)
     
 except FileNotFoundError:
     sys.exit("resources.json or config.json missing, quitting.")
