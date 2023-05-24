@@ -1,12 +1,6 @@
 from telegram import Update
-from telegram.ext import CommandHandler, CallbackContext, Filters, MessageHandler, Updater
-import logging
-import time
-import os
-import json
-import random
-import sys
-import re
+from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters
+import logging, time, os, json, random, sys, signal, re
 from subprocess import call
 
 CONFIGFILE = "config.json"
@@ -16,8 +10,6 @@ RESOURCE_FILE = "resources.json"
 CLOSED = 0
 OPEN = 1
 REPORTED = 2
-STATE = "open"
-REPORT = "report"
 
 MSG_OPEN = "OPENED"
 MSG_CLOSED = "CLOSED"
@@ -36,6 +28,9 @@ SOUND_ALERT = "SOUND_ALERT"
 CHECK_INTERVAL = 10
 
 
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.WARNING)
+
 # Load configuration and resources.
 try:
     resources = json.load(open(RESOURCE_FILE, "rb"))
@@ -44,66 +39,61 @@ try:
     ACTFILEPATH = config["actfile"]
     CHAT_ID = config["chat_id"]
     USE_PIC = config["use_pic_type"]
-    NAUGHTY_RE = re.compile("|".join(resources["NAUGHTY_REGEX"]), re.IGNORECASE)
-    IDENTITY_RE = re.compile(resources["IDENTITY_REGEX"], re.IGNORECASE)
-    
+    NAUGHTY_RE = re.compile("|".join(resources["NAUGHTY_REGEX"]))
+    IDENTITY_RE = re.compile(resources["IDENTITY_REGEX"])
+
 except FileNotFoundError:
     sys.exit("resources.json or config.json missing, quitting.")
 
 
-
 def get_resource(resource: str):
-"""Returns a random resource/response of given type from the resources.json"""
 
     i = random.randint(0, len(resources[resource]) - 1)
     return resources[resource][i]
 
 
-def send_text_message(context: CallbackContext, msg: str):
+async def send_text_message(context: CallbackContext, msg: str):
 
-    context.bot.send_message(chat_id=CHAT_ID, text=msg)
+    await context.bot.send_message(chat_id=CHAT_ID, text=msg)
 
 
-def send_photo_message(context: CallbackContext, image_path: str, msg: str) -> int:
+async def send_photo_message(context: CallbackContext, image_path: str, msg: str) -> int:
 
     try:
-        context.bot.send_photo(chat_id=CHAT_ID, photo=open(image_path, 'rb'), caption=msg)
+        await context.bot.send_photo(chat_id=CHAT_ID, photo=open(image_path, 'rb'), caption=msg)
         return 1
     except FileNotFoundError:
-        send_text(context, msg)
+        await send_text_message(context, msg)
         return 0
 
 
-def send_message(context: CallbackContext, msg: str, msg_type: str):
-"""Send either photo or ordinary message based on config"""
+# Send either photo or ordinary message based on config
+async def send_message(context: CallbackContext, msg: str, type: str):
 
     try:
         if not msg:
-            msg = get_resource(msg_type)
-        if USE_PIC[msg_type] != "":
-            send_photo_message(context, get_resource(USE_PIC[msg_type]), msg)
+            msg = get_resource(type)
+        if USE_PIC[type] != "":
+            await send_photo_message(context, get_resource(USE_PIC[type]), msg)
         else:
-            send_text_message(context, msg)
+            await send_text_message(context, msg)
     except KeyError:
-        error = "\n**** Resource configuration error: " + msg_type + " image type missing or resource name mismatch"
-        logging.getLogger().log(35, error)
+        print("\n**** Resource configuration error: " + type + " image type missing or resource name mismatch")
 
 
-def get_bot_data(context: CallbackContext, key: str) -> int:
-"""Return the state of the space from the context where it is stored"""
+def get_state(context: CallbackContext) -> int:
 
     try:
-        return context.bot_data[key]
+        return context.bot_data["open"]
     except KeyError:
-        set_bot_data(context, key, "")
-        return 0
+        set_state(context, CLOSED)
+        return CLOSED
 
 
-def set_bot_data(context: CallbackContext, key: str, value: int):
-"""Store the given state to the bot context."""
+def set_state(context: CallbackContext, state: int):
 
     try:
-        context.bot_data[key] = value
+        context.bot_data["open"] = state
     except KeyError:
         pass
 
@@ -113,133 +103,123 @@ def verify_chat_id(update: Update):
     return str(update.effective_chat.id) == CHAT_ID
 
 
+# Sound playing
 def play(sound):
-"""Play given sound. This is intended for audible alerts, notifications, etc."""
 
-    logging.getLogger().log(35, "***** playing sound: " + sound + " *****")
-    call(["aplay", "--buffer-size=4096",  sound]) 
+#    print("***** playing sound: " + sound + " *****")
+    call(["aplay", "--buffer-size=4096",  sound])
 
 
-def identity(update: Update, context: CallbackContext ):
-"""Respond to identity command"""
+# Doorbell
+def alert_signal(signum, stack):
+
+    if opened:
+        play(get_resource(SOUND_ALERT))
+
+# Doorbell signal (*NIX only)
+# signal.signal(signal.SIGUSR2, alert_signal)    
+
+
+
+async def identity(update: Update, context: CallbackContext ):
 
     if verify_chat_id(update):
-        send_message(context, "", MSG_IDENTITY)
+        await send_message(context, "", MSG_IDENTITY)
 
 
-def respond_to_idiots(update: Update, context: CallbackContext ):
-"""Respond to silly requests. 
-Named so due to the tendencies of the bot's namesake
-"""
+async def respond_to_idiots(update: Update, context: CallbackContext ):
 
     if verify_chat_id(update):
         msg = "@" + update.message.from_user.username + " "
         msg = msg + get_resource(MSG_STUPIDITY)
-        send_message(context, msg, MSG_STUPIDITY)
+        await send_message(context, msg, MSG_STUPIDITY)
 
 
     
-def process_report(update: Update, context: CallbackContext ):
-"""Process and react to given user activity report"""
+async def process_report(update: Update, context: CallbackContext ):
 
     if verify_chat_id(update):
+        if len(context.args) == 0:
+            return
         msg = " ".join(context.args)
-        if get_bot_data(context) != CLOSED :
+        if get_state(context) != CLOSED :
         
-            set_bot_data(context, REPORT, msg)
-            set_bot_data(context, STATE, REPORTED)
-            send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
+            context.bot_data["status"] = msg
+            set_state(context, REPORTED)
+            await send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
             play(get_resource(SOUND_OK))
             logging.getLogger().log(35, "New report: " + msg)
+            with open(ACTFILEPATH,'w', encoding = 'utf-8') as f:
+                f.write(msg)
             
         else:
-            send_message(context, "", MSG_NOT_OPEN)
+            await send_message(context, "", MSG_NOT_OPEN_ERROR)
         if NAUGHTY_RE.match(msg):
-            respond_to_idiots(update, context)
+            await respond_to_idiots(update, context)
             
 
-def give_report(update: Update, context: CallbackContext ):
-"""Respond to status request messages. 
-Read return the stored user activity report.
-"""
+async def give_report(update: Update, context: CallbackContext ):
 
     if verify_chat_id(update):
-        state = get_bot_data(context, STATE)
+        state = get_state(context)
         if  state == REPORTED:
-            msg = get_bot_data(context, REPORT)
-            send_message(context, "Currently: " + msg, MSG_REPORT)
+            msg = context.bot_data["status"]
+            await send_message(context, "Currently: " + msg, MSG_REPORT)
         elif state == OPEN:
-            send_message(context, "", MSG_NO_REPORT)
+            await send_message(context, "", MSG_NO_REPORT)
         else:
-            send_message(context, "", MSG_NOT_OPEN_ERROR)
+            await send_message(context, "", MSG_NOT_OPEN)
 
 
-def send_alert(update: Update, context: CallbackContext):
-"""React to audible alert command from user.
-Checks that message was from correct chat, that the space is open and
-then plays sound.
-"""
+async def send_alert(update: Update, context: CallbackContext):
     
     if verify_chat_id(update):
-        state = get_bot_data(context)
+        state = get_state(context)
         if  state != CLOSED:
-            send_message(context, "", MSG_ALERT)
+            await send_message(context, "", MSG_ALERT)
             play(get_resource(SOUND_ALERT))
         else:
-            send_message(context, "", MSG_NOT_OPEN_ERROR)
+            await send_message(context, "", MSG_NOT_OPEN_ERROR)
     
 
-def activity_check(context: CallbackContext):
-"""Function executed by the watchdog.
-Checks if there is a change in the monitored file and thus in state of the space.
-Acts accordingly depending on the change, if any.
-"""
+async def activity_check(context: CallbackContext):
 
     if os.path.exists(ACTFILEPATH):
-        if get_bot_data(context) == CLOSED:
-            set_bot_data(context, STATE, OPEN)
-            send_message(context, "", MSG_OPEN)
+        if get_state(context) == CLOSED:
+            set_state(context, OPEN)
+            await send_message(context, "", MSG_OPEN)
             logging.getLogger().log(35, "Open")
     else:
-        if get_bot_data(context) != CLOSED:
-            set_bot_data(context, STATE, CLOSED)
-            set_bot_data(context, REPORT, "")
-            send_message(context, "", MSG_CLOSED)
+        if get_state(context) != CLOSED:
+            context.bot_data["open"] = CLOSED
+            await send_message(context, "", MSG_CLOSED)
             logging.getLogger().log(35, "Closed")
 
 
-def main():
-"""Main function.
-Sets up the bot and handlers for different bot commands.
-Registers the said handlers to the bot's dispatcher and runs the bot.
-"""
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.WARNING)
+def log( msg: str ):
+    print()
 
-    updater = Updater(token=TOKEN)
-    dispatcher = updater.dispatcher
-    
-  
+def main():
+
+    application = Application.builder().token(TOKEN).build()
   
     identity_handler = CommandHandler(['who'], identity)
     alert_handler = CommandHandler(['alert', 'notify'], send_alert)
     report_handler = CommandHandler(['Ruriruri', 'reporting'], process_report)
     status_handler = CommandHandler(['status', 'report'], give_report)
-    pervert_and_idiot_handler = MessageHandler(Filters.regex(IDENTITY_RE) & Filters.regex(NAUGHTY_RE), respond_to_idiots)
+    pervert_and_idiot_handler = MessageHandler(filters.Regex(IDENTITY_RE) & filters.Regex(NAUGHTY_RE), respond_to_idiots)
     
     
-    dispatcher.add_handler(identity_handler)
-    dispatcher.add_handler(alert_handler)
-    dispatcher.add_handler(report_handler)
-    dispatcher.add_handler(status_handler)
-    dispatcher.add_handler(pervert_and_idiot_handler)
+    application.add_handler(identity_handler)
+    application.add_handler(alert_handler)
+    application.add_handler(report_handler)
+    application.add_handler(status_handler)
+    application.add_handler(pervert_and_idiot_handler)
     
-    updater.job_queue.run_repeating(activity_check, interval=CHECK_INTERVAL, first=0)
+    job_queue = application.job_queue
+    job_queue.run_repeating(activity_check, interval=CHECK_INTERVAL, first=0)
     
-    
-    updater.start_polling()
-    updater.idle()
-
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
