@@ -52,7 +52,10 @@
     "Diiip.wav"
   ],
   
-  "IDENTITY" : "I'm Ruri Hoshino, part time club room monitor.",
+  "IDENTITY" : [
+	"I'm Ruri Hoshino, part time club room monitor.",
+	"I'm Ruri, just a young girl who watches over the club room with Omoikane",
+	"Club room monitor, Ruri Hoshino"],
   
   "OPENED" : [
     "Activity in club room, could be a life form.",
@@ -61,23 +64,28 @@
     "Something is happening in the club room.",
     "Club room is open and systems are active.",
     "Club room open, sensors online.",
-    "Ruri here, club room is open."
+    "Ruri here, club room is open.",
+	"Anomaly detected in the club room sensors.",
+	"Omoikane reports that club room is open"
   ],
   "CLOSED" : [
-    "Activity at club room ended.",
-    "Club room is now closed.",
-    "Lost contact with club room, I suppose it is closed.",
-    "Sensors indicate that club room is now closed."
+    "Activity at the club room ended.",
+    "The club room is now closed.",
+    "Lost contact with the club room, I suppose it is closed.",
+    "Sensors indicate that the club room is now closed.",
+	"Systems at the club room deactivated and It is closed."
   ],
   "REPORT" : [
     "Responses for report-type messages. Just a placeholder for now."
   ],
   "NO_REPORT" : [
-    "Club room is open, but no report has arrived yet.",
+    "The club room is open, but no report has arrived yet.",
     "Something is happening but I do not know what.",
-    "Open and whatever is happening there is a mystery to me.",
+    "The club room is open and whatever is happening there is a mystery to me.",
     "The place is open but nothing is reported.",
-    "Ruri here, club room is open but I don't know what they are doing."
+    "Ruri here, club room is open but I don't know what they are doing.",
+	"The room is open but they forgot to tell me what is happening. Typical.",
+	"Uncertain, nothing has been reported but the room is open"
   ],
   "NOT_OPEN_ERROR" : [
     "It's not open. Then again I'm just a little girl - What do I know?",
@@ -85,14 +93,15 @@
     "Unless Omoikane is malfunctioning, the club room is closed.",
     "I can't do that, the place is not open yet.",
     "I cannot take reports when the place is closed. Would you like me to get Inez to explain the concept to you?",
-    "Club room is closed so it could be that you have phase transitioned. Contact Fressange for explanation.",
+    "The club room is closed so it could be that you have phase transitioned. Contact Fressange for explanation.",
     "<sigh> It's not open at the moment."
   ],
   "NOT_OPEN" : [
-    "Club room is currently closed.",
+    "The club room is currently closed.",
     "Sensors indicate no activity in club room",
     "It seems that the club room is closed",
-    "According to Omoikane, the club room is closed."
+    "According to Omoikane, the club room is closed.",
+	"It is closed."
   ],
   "ALERT" : [
     "Affirmative, sending audible alert.",
@@ -107,44 +116,36 @@
     "<sigh>",
     "really..."
   ],
-  "IDENTITY_REGEX" : "(R|r)uri | /reporting",
+  "IDENTITY_REGEX" : "\\b(R|r)uri(|(R|r)uri|-chan|-san)\\b|\\b/reporting\\b",
   
   "NAUGHTY_REGEX" : [
-    "panties",
-    "tits",
-    "oppai",
-    "boobs",
-    "boobies",
-    "porn",
-    "hentai",
-    "cock",
-    "pantsu",
-    "blowjob",
-    "waifu",
-    "paizuri",
-    "cunt",
-    "piss",
-    "titties",
-    "cum",
-    "fuck",
-    "shimapan",
-    "fuck",
-    "ass",
-    "asshole",
-    "dickwad",
-    "dick",
-    "hooker",
-    "hookers",
-    "slut",
-    "slutty",
-    "asswipe",
-    "arse",
-    "arsehole",
-    "mokkori",
-    "anus",
-    "anal",
-    "nipples",
-    "futanari",
-    "lolicon"
+    "(A|a)nal",
+    "(A|a)nus",
+    "(A|a)rse(|hole)",
+    "(A|a)ss(|hole|wipe)",
+    "(B|b)lowjob",
+    "(B|b)oob(s|ies)",
+    "(C|c)ock",
+    "(C|c)um",
+    "(C|c)unt",
+    "(D|d)ick(|wad)",
+    "(F|f)uck",
+    "(F|f)utanari",
+    "(H|h)entai",
+    "(H|h)ooker(|s)",
+    "(L|l)olicon",
+    "(P|p)anties",
+    "(P|p)antsu",
+    "(O|o)ppai",
+    "(P|p)orn",
+    "(N|n)ipples",
+    "(M|m)okkori",
+    "(P|p)aizuri",
+    "(P|p)iss(|ing)",
+    "(S|s)himapan",
+    "(S|s)lut(|ty)",
+    "(S|s)uck",
+    "(T|t)it(s|ties)",
+    "(W|w)aifu"
   ]
 }

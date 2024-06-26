@@ -1,17 +1,35 @@
 {
-  "token": "TG TOKEN GOES HERE",
-  "actfile": "LOCATION OF THE MONITORED ACTIVITY FILE GOES HERE", 
-  "chat_id": "CHAT ID OF THE TARGET TG GROUP",
-  "use_pic_type": {
+  "token": "TOKEN HERE",
+  "activity_file": "./open",
+  "alt_reportfile": "./report",
+  "chat_id": "CHANNEL HERE",
+  "use_pictures": false,
+  "use_stickers": true,
+  "sticker_spam_limit": 3,
+  "pictures": {
     "OPENED" : "Ruri_pic",
     "CLOSED" : "Ruri_pic",
     "NO_REPORT" : "baka_pic",
     "NOT_OPEN" : "Ruri_pic",
-    "NOT_OPEN_ERROR" : "baka_pic",
+    "NOT_OPEN_ERROR" : "baka_text_pic",
     "REPORT" : "Ruri_pic",
     "ALERT" : "Ruri_pic",
     "OTHER" : "Ruri_pic",
     "IDENTITY" : "Ruri_pic",
     "STUPIDITY" : "baka_text_pic"
+  },
+  "sticker_pack": "Ruri_bot_reactions",
+  "sticker_subsets":
+  {
+    "OPENED" : {"start":0,"end":29},
+    "CLOSED" : {"start":0,"end":29},
+    "NO_REPORT" : {"start":21,"end":29},
+    "NOT_OPEN" : {"start":0,"end":29},
+    "NOT_OPEN_ERROR" : {"start":29,"end":37},
+    "REPORT" : {"start":0,"end":29},
+    "ALERT" : {"start":16,"end":21},
+    "OTHER" : {"start":0,"end":29},
+    "IDENTITY" : {"start":0,"end":7},
+    "STUPIDITY" : {"start":38,"end":55}
   }
 }
