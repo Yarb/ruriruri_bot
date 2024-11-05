@@ -109,6 +109,15 @@
     "Sending audio message...now.",
     "Opening a connection and letting them know."
   ],
+  "NEED_REPORT" : [
+    "Your report is missing a activity description.",
+    "Please provide a description of the activity with the report. <sigh>",
+    "I need more information to complete the report.",
+    "Did you forget the activity description? <sigh>",
+    "<sigh> Another Telegram autocomplete error, I suppose. Please provide a description of the activity with the report.",
+    "I need a description of the activity to complete the report.",
+    "<sigh> I wonder when they will fix the autocomplete. Please provide a description of the activity with the report."
+  ],
   "OTHER" : [
     "Other messages would go here..."
   ],

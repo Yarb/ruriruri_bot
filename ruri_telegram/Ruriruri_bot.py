@@ -28,6 +28,7 @@ MSG_CLOSED = "CLOSED"
 MSG_NO_REPORT = "NO_REPORT"
 MSG_NOT_OPEN = "NOT_OPEN"
 MSG_NOT_OPEN_ERROR = "NOT_OPEN_ERROR"
+MSG_NEED_REPORT = "NEED_REPORT"
 MSG_REPORT = "REPORT"
 MSG_ALERT = "ALERT"
 MSG_OTHER = "OTHER"
@@ -51,6 +52,9 @@ STICKER_SUBSETS = "sticker_subsets"
 SPAM_COUNT = "spamcount"
 SPAM_LIMIT = "sticker_spam_limit"
 
+HTML_CLOSED = '<link rel="stylesheet" href="report.css"><b id="red">Closed</b>'
+HTML_OPEN = '<link rel="stylesheet" href="report.css"><b id="green">Open</b>'
+
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -70,6 +74,12 @@ naughty_re = re.compile(r"\b(?:%s)\b" % "|".join(resources["NAUGHTY_REGEX"]), re
 identity_re = re.compile(resources["IDENTITY_REGEX"], re.IGNORECASE)
 
 
+
+def play(sound):
+    """Play given sound. This is intended for audible alerts, notifications, etc."""
+
+    logging.getLogger().log(35, "***** playing sound: " + sound + " *****")
+    call(["aplay", "-D", "sysdefault:CARD=Headphones", sound])
 
 
 
@@ -130,19 +140,19 @@ async def process_report(update: Update, context: CallbackContext ):
     if verify_chat_id(update):
         msg = " ".join(context.args)
         if get_state(context, STATUS) != CLOSED :
-        
-            set_state(context, REPORT, msg)
-            await send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
-            #play(get_resource(SOUND_OK))
-            
-            with open(config[ACTFILE],'w', encoding = 'utf-8') as f:
-                f.write(msg)
-            with open(config[REPORT_FILE_ALT],'w', encoding = 'utf-8') as f:
-                f.write(msg)
-            
-            
-            logging.getLogger().log(35, "New report: " + msg)
-            
+            if len(msg) > 0:
+                set_state(context, REPORT, msg)
+                await send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
+                #play(get_resource(SOUND_OK))
+                
+                with open(config[ACTFILE],'w', encoding = 'utf-8') as f:
+                    f.write(msg)
+                with open(config[REPORT_FILE_ALT],'w', encoding = 'utf-8') as f:
+                    f.write(HTML_OPEN)
+                    f.write("<b> - " + msg + "</b>")
+                logging.getLogger().log(35, "New report: " + msg)
+            else:
+                await send_message(context, "", MSG_NEED_REPORT)
         else:
             await send_message(context, "", MSG_NOT_OPEN_ERROR)
         if naughty_re.search(msg):
@@ -210,8 +220,6 @@ async def send_message(context: CallbackContext, msg: str, msg_type: str):
         logging.getLogger().log(35, error)
 
 
-
-
 async def activity_check(context: CallbackContext):
     """Function executed by the watchdog.
     Checks if there is a change in the monitored file and thus in state of the space.
@@ -222,6 +230,8 @@ async def activity_check(context: CallbackContext):
         if get_state(context, STATUS) == CLOSED:
             set_state(context, STATUS, OPEN)
             await send_message(context, "", MSG_OPEN)
+            with open(config[REPORT_FILE_ALT],'w', encoding = 'utf-8') as f:
+                f.write(HTML_OPEN)
             logging.getLogger().log(35, "Open")
     else:
         if get_state(context, STATUS) != CLOSED:
@@ -229,9 +239,8 @@ async def activity_check(context: CallbackContext):
             set_state(context, REPORT, "")
             await send_message(context, "", MSG_CLOSED)
             with open(config[REPORT_FILE_ALT],'w', encoding = 'utf-8') as f:
-                f.write("")
+                f.write(HTML_CLOSED)
             logging.getLogger().log(35, "Closed")
-
 
 
 async def initialize(context: CallbackContext):

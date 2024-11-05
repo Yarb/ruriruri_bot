@@ -16,7 +16,8 @@
     "ALERT" : "Ruri_pic",
     "OTHER" : "Ruri_pic",
     "IDENTITY" : "Ruri_pic",
-    "STUPIDITY" : "baka_text_pic"
+    "STUPIDITY" : "baka_text_pic",
+    "NEED_REPORT" : "baka_pic"
   },
   "sticker_pack": "Ruri_bot_reactions",
   "sticker_subsets":
@@ -30,6 +31,7 @@
     "ALERT" : {"start":16,"end":21},
     "OTHER" : {"start":0,"end":29},
     "IDENTITY" : {"start":0,"end":7},
-    "STUPIDITY" : {"start":38,"end":55}
+    "STUPIDITY" : {"start":38,"end":55},
+    "NEED_REPORT" : {"start":29,"end":37}
   }
 }
