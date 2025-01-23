@@ -110,7 +110,7 @@
     "Opening a connection and letting them know."
   ],
   "NEED_REPORT" : [
-    "Your report is missing a activity description.",
+    "Your report is missing an activity description.",
     "Please provide a description of the activity with the report. <sigh>",
     "I need more information to complete the report.",
     "Did you forget the activity description? <sigh>",
