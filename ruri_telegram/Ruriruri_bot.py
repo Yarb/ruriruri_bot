@@ -104,16 +104,20 @@ def get_resource(resource: str):
 
 
 
-def verify_chat_id(update: Update):
-
-    return str(update.effective_chat.id) == config[CHAT_ID]
+def verify_message(update: Update):
+    """Verify that the message is from the correct chat and is a new message, not a reaction or other update type."""
+    if str(update.effective_chat.id) == config[CHAT_ID]:
+        if update.message is None:
+            logging.getLogger().log(35, "Ignoring non-message update")
+            return False
+        return True
 
 
 
 async def identity(update: Update, context: CallbackContext ):
     """Respond to identity command"""
 
-    if verify_chat_id(update):
+    if verify_message(update):
         await send_message(context, "", MSG_IDENTITY)
 
 
@@ -124,7 +128,7 @@ async def send_alert(update: Update, context: CallbackContext):
     then plays sound.
     """
     
-    if verify_chat_id(update):
+    if verify_message(update):
         
         if  get_state(context, STATUS) != CLOSED:
             await send_message(context, "", MSG_ALERT)
@@ -137,7 +141,7 @@ async def send_alert(update: Update, context: CallbackContext):
 async def process_report(update: Update, context: CallbackContext ):
     """Process and react to given user activity report"""
 
-    if verify_chat_id(update):
+    if verify_message(update):
         msg = " ".join(context.args)
         if get_state(context, STATUS) != CLOSED :
             if len(msg) > 0:
@@ -165,7 +169,7 @@ async def give_report(update: Update, context: CallbackContext ):
     Read return the stored user activity report.
     """
 
-    if verify_chat_id(update):
+    if verify_message(update):
         if  get_state(context, STATUS) == OPEN:
             msg = get_state(context, REPORT)
             if msg == "":
@@ -262,7 +266,7 @@ async def respond_to_idiots(update: Update, context: CallbackContext ):
     Named so due to the tendencies of the bot's namesake
     """
 
-    if verify_chat_id(update):
+    if verify_message(update):
         msg = ""
         if update.message.from_user:
             msg = "@" + update.message.from_user.username + " "
