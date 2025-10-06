@@ -5,6 +5,7 @@
   "chat_id": "CHANNEL HERE",
   "use_pictures": false,
   "use_stickers": true,
+  "use_audio": false,
   "sticker_spam_limit": 3,
   "pictures": {
     "OPENED" : "Ruri_pic",

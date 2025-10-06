@@ -45,6 +45,7 @@ ACTFILE = "activity_file"
 REPORT_FILE_ALT = "alt_reportfile"
 CHAT_ID = "chat_id"
 USE_PIC = "use_pictures"
+USE_AUDIO = "use_audio"
 PICTURES = "pictures"
 USE_STICKER = "use_stickers"
 STICKER_PACK = "sticker_pack"
@@ -78,8 +79,9 @@ identity_re = re.compile(resources["IDENTITY_REGEX"], re.IGNORECASE)
 def play(sound):
     """Play given sound. This is intended for audible alerts, notifications, etc."""
 
-    logging.getLogger().log(35, "***** playing sound: " + sound + " *****")
-    call(["aplay", "-D", "sysdefault:CARD=Headphones", sound])
+    if config[USE_AUDIO]:
+        logging.getLogger().log(35, "***** playing sound: " + sound + " *****")
+        call(["aplay", "-D", "sysdefault:CARD=Headphones", sound])
 
 
 
@@ -132,7 +134,7 @@ async def send_alert(update: Update, context: CallbackContext):
         
         if  get_state(context, STATUS) != CLOSED:
             await send_message(context, "", MSG_ALERT)
-            # play(get_resource(SOUND_ALERT))
+            play(get_resource(SOUND_ALERT))
         else:
             await send_message(context, "", MSG_NOT_OPEN_ERROR)
 
@@ -147,7 +149,7 @@ async def process_report(update: Update, context: CallbackContext ):
             if len(msg) > 0:
                 set_state(context, REPORT, msg)
                 await send_message(context, "Understood, activity set: " + msg, MSG_REPORT)
-                #play(get_resource(SOUND_OK))
+                play(get_resource(SOUND_OK))
                 
                 with open(config[ACTFILE],'w', encoding = 'utf-8') as f:
                     f.write(msg)
