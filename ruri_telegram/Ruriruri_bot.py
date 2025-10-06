@@ -130,13 +130,15 @@ async def send_alert(update: Update, context: CallbackContext):
     then plays sound.
     """
     
-    if verify_message(update):
-        
-        if  get_state(context, STATUS) != CLOSED:
-            await send_message(context, "", MSG_ALERT)
-            play(get_resource(SOUND_ALERT))
-        else:
-            await send_message(context, "", MSG_NOT_OPEN_ERROR)
+    if config[USE_AUDIO]:
+        if verify_message(update):    
+            if  get_state(context, STATUS) != CLOSED:
+                await send_message(context, "", MSG_ALERT)
+                play(get_resource(SOUND_ALERT))
+            else:
+                await send_message(context, "", MSG_NOT_OPEN_ERROR)
+    else:
+        logging.getLogger().log(35, "Audio disabled in config, ignoring alert command.")
 
 
 
