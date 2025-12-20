@@ -280,16 +280,21 @@ async def respond_to_idiots(update: Update, context: CallbackContext ):
 
 
 async def sticker_counter(update: Update, context: CallbackContext):
-    
-    if update.message.sticker and config[USE_STICKER]:
-        counter = get_state(context, SPAM_COUNT)
-        if counter == get_state(context, SPAM_LIMIT):
-            await send_sticker(context, config[STICKER_SUBSETS][MSG_IDIOTS]) 
-        counter += 1
-        set_state(context, SPAM_COUNT, counter)
+    """Count posted stickers and respond with a idiot sticker if spam limit is reached.
+    Ensure that there is a message, that it is a sticker and that sticker responses are enabled."""
+  
+    if config[USE_STICKER] and verify_message(update):
+        if update.message.sticker:
+            counter = get_state(context, SPAM_COUNT)
+            if counter == get_state(context, SPAM_LIMIT):
+                await send_sticker(context, config[STICKER_SUBSETS][MSG_IDIOTS]) 
+            counter += 1
+            set_state(context, SPAM_COUNT, counter)
+        else:
+            set_state(context, SPAM_COUNT, 0)
+            set_state(context, SPAM_LIMIT, config[SPAM_LIMIT] + random.randint(0,3))
     else:
-        set_state(context, SPAM_COUNT, 0)
-        set_state(context, SPAM_LIMIT, config[SPAM_LIMIT] + random.randint(0,3))
+        logging.getLogger().log(35, "Ignoring non-message update in sticker counter.")
         
 
 
